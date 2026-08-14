@@ -1,0 +1,31 @@
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Update netcup DNS records with the current public IP, then repeat on an interval
+# ==============================================================================
+
+readonly DEFAULT_INTERVAL=5
+
+declare interval
+
+if ! php /usr/bin/netcup-dyndns-genconfig.php; then
+    bashio::exit.nok "Invalid configuration, see the message above."
+fi
+
+interval=$(bashio::config 'update_interval')
+
+# Guards the sleep below against an unreadable or unset option. Without a usable
+# number the loop would spin and hammer the netcup API.
+if ! [[ "${interval}" =~ ^[0-9]+$ ]] || [[ "${interval}" -lt 1 ]]; then
+    bashio::log.warning "Could not read the update interval, falling back to ${DEFAULT_INTERVAL}."
+    interval=${DEFAULT_INTERVAL}
+fi
+
+bashio::log.info "Updating netcup DNS records every ${interval} minute(s)."
+
+while true; do
+    if ! php /opt/netcup/update.php -c /tmp/config.php; then
+        bashio::log.warning "Update failed, retrying in ${interval} minute(s)."
+    fi
+
+    sleep "$((interval * 60))"
+done

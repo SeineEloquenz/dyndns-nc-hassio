@@ -1,0 +1,35 @@
+name: netcup Dynamic DNS
+version: "1.0.0"
+slug: netcup-dyndns
+description: Keeps netcup DNS records pointed at your current public IP address
+url: "https://github.com/SeineEloquenz/netcup-dyndns-hass/tree/main/netcup-dyndns"
+image: "ghcr.io/seineeloquenz/netcup-dyndns"
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: services
+options:
+  use_ipv4: true
+  use_ipv6: false
+  change_ttl: true
+  update_interval: 5
+schema:
+  customer_number: "str?"
+  api_key: "password?"
+  api_password: "password?"
+  domains: "str?"
+  clouddns_api_key: "password?"
+  clouddns_domains: "str?"
+  use_ipv4: "bool"
+  use_ipv6: "bool"
+  change_ttl: "bool"
+  update_interval: "int(1,1440)"
+  jitter_max: "int(0,300)?"
+  retry_sleep: "int(0,600)?"
+  ipv4_url: "url?"
+  ipv4_url_fallback: "url?"
+  ipv6_url: "url?"
+  ipv6_url_fallback: "url?"
+  api_url: "url?"
+  clouddns_api_url: "url?"

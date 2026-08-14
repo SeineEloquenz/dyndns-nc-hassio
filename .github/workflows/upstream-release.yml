@@ -1,0 +1,156 @@
+name: Upstream release
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  UPSTREAM_REPO: stecklars/dynamic-dns-netcup-api
+
+jobs:
+  update:
+    name: Check for a new dynamic-dns-netcup-api release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Resolve the latest upstream release
+        id: upstream
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          tag=$(gh release view --repo "${UPSTREAM_REPO}" --json tagName -q .tagName)
+          sha=$(gh api "repos/${UPSTREAM_REPO}/commits/${tag}" -q .sha)
+          current=$(sed -n 's/^ARG UPSTREAM_REF=//p' netcup-dyndns/Dockerfile)
+
+          echo "Latest upstream release: ${tag} (${sha})"
+          echo "Currently bundled:       ${current}"
+
+          if [[ "${sha}" == "${current}" ]]; then
+            echo "has_update=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          branch="upstream/${tag}"
+          if git ls-remote --exit-code --heads origin "${branch}" >/dev/null 2>&1; then
+            echo "Branch ${branch} already exists, nothing to do."
+            echo "has_update=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          {
+            echo "has_update=true"
+            echo "tag=${tag}"
+            echo "sha=${sha}"
+            echo "branch=${branch}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Apply the update
+        if: steps.upstream.outputs.has_update == 'true'
+        id: apply
+        env:
+          TAG: ${{ steps.upstream.outputs.tag }}
+          SHA: ${{ steps.upstream.outputs.sha }}
+        run: |
+          set -euo pipefail
+
+          upstream_version=${TAG#v}
+          sed -i "s|^ARG UPSTREAM_VERSION=.*|ARG UPSTREAM_VERSION=${upstream_version}|" netcup-dyndns/Dockerfile
+          sed -i "s|^ARG UPSTREAM_REF=.*|ARG UPSTREAM_REF=${SHA}|" netcup-dyndns/Dockerfile
+
+          # The app version has to change for the Supervisor to offer the update,
+          # and it has to match the tag the builder workflow publishes.
+          version=$(sed -n 's/^version: "\(.*\)"$/\1/p' netcup-dyndns/config.yaml)
+          IFS=. read -r major minor _ <<< "${version}"
+          new_version="${major}.$((minor + 1)).0"
+          sed -i "s|^version: \".*\"$|version: \"${new_version}\"|" netcup-dyndns/config.yaml
+
+          {
+            echo "# Changelog"
+            echo
+            echo "## ${new_version}"
+            echo
+            echo "- Update dynamic-dns-netcup-api to ${TAG}."
+            tail -n +2 netcup-dyndns/CHANGELOG.md
+          } > CHANGELOG.new
+          mv CHANGELOG.new netcup-dyndns/CHANGELOG.md
+
+          echo "new_version=${new_version}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify the image still builds
+        if: steps.upstream.outputs.has_update == 'true'
+        run: |
+          set -euo pipefail
+
+          docker build -t netcup-dyndns-upstream-check netcup-dyndns/
+
+          # Catches an upstream release that adds a config constant we do not
+          # write, which would otherwise only fail once the app is started.
+          mkdir -p smoke
+          cat > smoke/options.json <<'JSON'
+          {
+            "customer_number": "123456",
+            "api_key": "dummy-key",
+            "api_password": "dummy-password",
+            "domains": "example.com: @",
+            "clouddns_api_key": "dummy-cloud-key",
+            "clouddns_domains": "other.tld: @",
+            "use_ipv4": true,
+            "use_ipv6": false,
+            "change_ttl": true,
+            "update_interval": 5
+          }
+          JSON
+
+          docker run --rm --entrypoint /bin/bash \
+            -v "${PWD}/smoke:/data:ro" netcup-dyndns-upstream-check -c '
+              set -eu
+              php /usr/bin/netcup-dyndns-genconfig.php
+              php -l /tmp/config.php
+            '
+
+          rm -rf smoke
+
+      - name: Open a pull request
+        if: steps.upstream.outputs.has_update == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.upstream.outputs.tag }}
+          SHA: ${{ steps.upstream.outputs.sha }}
+          BRANCH: ${{ steps.upstream.outputs.branch }}
+          NEW_VERSION: ${{ steps.apply.outputs.new_version }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "${BRANCH}"
+          git add netcup-dyndns/Dockerfile netcup-dyndns/config.yaml netcup-dyndns/CHANGELOG.md
+          git commit -m "Update dynamic-dns-netcup-api to ${TAG}"
+          git push -u origin "${BRANCH}"
+
+          gh pr create \
+            --title "Update dynamic-dns-netcup-api to ${TAG}" \
+            --body "$(cat <<EOF
+          Bundles [${TAG}](https://github.com/${UPSTREAM_REPO}/releases/tag/${TAG}) of the netcup
+          updater, pinned to \`${SHA}\`, and bumps the app to \`${NEW_VERSION}\` so the Supervisor
+          offers it to existing installs.
+
+          The image builds and the generated \`config.php\` parses. Before merging, skim the
+          upstream release notes for **new or renamed config constants** — anything \`update.php\`
+          reads without a \`defined()\` guard has to be written by
+          \`rootfs/usr/bin/netcup-dyndns-genconfig.php\`, and a missing one is a fatal error at
+          startup rather than a build failure.
+          EOF
+          )"

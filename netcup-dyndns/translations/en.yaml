@@ -1,0 +1,82 @@
+configuration:
+  customer_number:
+    name: Customer number
+    description: >-
+      Your netcup customer number. Required when "Domains" is set.
+  api_key:
+    name: Legacy API key
+    description: >-
+      Legacy API key from the CCP under master data > API, "Legacy-API-Keys" section. Required
+      when "Domains" is set.
+  api_password:
+    name: API password
+    description: >-
+      API password belonging to the Legacy API key. Required when "Domains" is set.
+  domains:
+    name: Domains (classic CCP DNS API)
+    description: >-
+      Domains that show a "DNS" tab in the CCP, in the format
+      "example.com: @, www; other.tld: mail". Use @ for the domain root and * for a wildcard.
+  clouddns_api_key:
+    name: CloudDNS API key
+    description: >-
+      Regular API key from the CCP under master data > API, "API-Keys" section. This is not the
+      Legacy API key. Required when "CloudDNS domains" is set.
+  clouddns_domains:
+    name: CloudDNS domains
+    description: >-
+      Domains that show a "CloudDNS" tab in the CCP, same format as "Domains". A domain belongs
+      in either this list or "Domains", never both.
+  use_ipv4:
+    name: Update IPv4 (A records)
+    description: >-
+      Look up your public IPv4 address and keep A records in sync. Turn this off behind carrier
+      grade NAT.
+  use_ipv6:
+    name: Update IPv6 (AAAA records)
+    description: >-
+      Look up your public IPv6 address and keep AAAA records in sync. Turn this on only if you
+      actually have IPv6 connectivity, otherwise every run fails.
+  change_ttl:
+    name: Lower TTL to 300 seconds
+    description: >-
+      Set the TTL of updated records to 300 seconds. Does not apply to CloudDNS domains, which
+      always get 300 seconds.
+  update_interval:
+    name: Update interval (minutes)
+    description: >-
+      How often to check your public IP. Runs where the address is unchanged skip the netcup API
+      entirely, so short intervals are cheap.
+  jitter_max:
+    name: Maximum jitter (seconds)
+    description: >-
+      Random delay of up to this many seconds before contacting the API, spreading load across
+      users. Defaults to 30. Set to 0 to disable.
+  retry_sleep:
+    name: Retry delay (seconds)
+    description: >-
+      How long to wait before retrying after a network error or invalid response. Defaults to 30.
+  ipv4_url:
+    name: IPv4 lookup URL
+    description: >-
+      Service used to determine your public IPv4 address. Defaults to https://get-ipv4.steck.cc.
+  ipv4_url_fallback:
+    name: IPv4 lookup URL (fallback)
+    description: >-
+      Used when the primary IPv4 lookup fails. Defaults to https://ipv4.seeip.org.
+  ipv6_url:
+    name: IPv6 lookup URL
+    description: >-
+      Service used to determine your public IPv6 address. Defaults to https://get-ipv6.steck.cc.
+  ipv6_url_fallback:
+    name: IPv6 lookup URL (fallback)
+    description: >-
+      Used when the primary IPv6 lookup fails. Defaults to https://v6.ident.me.
+  api_url:
+    name: CCP DNS API endpoint
+    description: >-
+      Override the netcup DNS API endpoint. Leave empty unless netcup tells you otherwise.
+  clouddns_api_url:
+    name: CloudDNS DynDNS endpoint
+    description: >-
+      Override the CloudDNS DynDNS endpoint. Leave empty unless netcup tells you otherwise.
