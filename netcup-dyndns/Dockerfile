@@ -1,4 +1,4 @@
-FROM ghcr.io/home-assistant/base:3.23
+FROM ghcr.io/home-assistant/base:3.24
 
 ARG UPSTREAM_VERSION=7.0.0
 # The commit the tag above points at. A SHA rather than the tag itself, because
