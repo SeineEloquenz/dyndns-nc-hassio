@@ -1,12 +1,16 @@
 FROM ghcr.io/home-assistant/base:3.24
 
 ARG UPSTREAM_VERSION=7.0.0
-# The commit the tag above points at. A SHA rather than the tag itself, because
-# tags can be moved. Both lines are rewritten by the upstream-release workflow.
+# Both ARG lines are rewritten by the upstream-release workflow.
 ARG UPSTREAM_REF=8e1e33423df69b6e4bb8bd53beaf9cbc442bfd67
 
+ARG PHP_PKG=php84
+
 RUN \
-    apk add --no-cache php84 php84-curl \
+    apk add --no-cache "${PHP_PKG}" "${PHP_PKG}-curl" \
+    # The php84 package provides no unversioned php command.
+    && ln -sf "/usr/bin/${PHP_PKG}" /usr/bin/php \
+    && php -r 'exit(extension_loaded("curl") ? 0 : 1);' \
     && mkdir -p /opt/netcup \
     && for file in update.php functions.php; do \
         curl -sSLf -o "/opt/netcup/${file}" \

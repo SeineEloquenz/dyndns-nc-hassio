@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- Fix a startup crash loop on base image 3.24, where PHP is installed without the
+  unversioned `php` command the service scripts rely on.
+
 ## 1.0.0
 
 - Initial release, bundling dynamic-dns-netcup-api v7.0.0.

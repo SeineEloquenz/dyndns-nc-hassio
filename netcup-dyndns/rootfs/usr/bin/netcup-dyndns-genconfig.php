@@ -115,8 +115,7 @@ foreach (TEXT_OPTIONS as $key => $constant) {
     }
 }
 
-// update.php falls back to a default for every other optional constant, but
-// dereferences APIURL unconditionally, so it has to be written out every time.
+// update.php dereferences APIURL without a defined() guard.
 $lines[] = define_line('APIURL', var_export($text('api_url') ?? DEFAULT_API_URL, true));
 
 $flags = [
@@ -138,8 +137,7 @@ foreach (NUMBER_OPTIONS as $key => $constant) {
 
 $lines[] = define_line('CACHE_FILE', var_export(CACHE_PATH, true));
 
-// Restricts the file to root before any credentials reach it. Writing first and
-// chmod'ing afterwards would leave them world-readable in between.
+// Set before the write so the credentials are never briefly world-readable.
 umask(0077);
 
 if (file_put_contents(CONFIG_PATH, implode(PHP_EOL, $lines) . PHP_EOL) === false) {

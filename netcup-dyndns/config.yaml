@@ -1,5 +1,5 @@
 name: netcup Dynamic DNS
-version: "1.0.0"
+version: "1.0.1"
 slug: netcup-dyndns
 description: Keeps netcup DNS records pointed at your current public IP address
 url: "https://github.com/SeineEloquenz/dyndns-nc-hassio/tree/main/netcup-dyndns"

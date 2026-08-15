@@ -68,8 +68,7 @@ jobs:
           sed -i "s|^ARG UPSTREAM_VERSION=.*|ARG UPSTREAM_VERSION=${upstream_version}|" netcup-dyndns/Dockerfile
           sed -i "s|^ARG UPSTREAM_REF=.*|ARG UPSTREAM_REF=${SHA}|" netcup-dyndns/Dockerfile
 
-          # The app version has to change for the Supervisor to offer the update,
-          # and it has to match the tag the builder workflow publishes.
+          # Without a version change the Supervisor never offers the update.
           version=$(sed -n 's/^version: "\(.*\)"$/\1/p' netcup-dyndns/config.yaml)
           IFS=. read -r major minor _ <<< "${version}"
           new_version="${major}.$((minor + 1)).0"
@@ -94,8 +93,7 @@ jobs:
 
           docker build -t netcup-dyndns-upstream-check netcup-dyndns/
 
-          # Catches an upstream release that adds a config constant we do not
-          # write, which would otherwise only fail once the app is started.
+          # A config constant we do not write fails at startup, not at build.
           mkdir -p smoke
           cat > smoke/options.json <<'JSON'
           {
@@ -148,7 +146,7 @@ jobs:
           offers it to existing installs.
 
           The image builds and the generated \`config.php\` parses. Before merging, skim the
-          upstream release notes for **new or renamed config constants** — anything \`update.php\`
+          upstream release notes for **new or renamed config constants**. Anything \`update.php\`
           reads without a \`defined()\` guard has to be written by
           \`rootfs/usr/bin/netcup-dyndns-genconfig.php\`, and a missing one is a fatal error at
           startup rather than a build failure.

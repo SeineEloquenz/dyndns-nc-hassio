@@ -1,7 +1,4 @@
 #!/usr/bin/with-contenv bashio
-# ==============================================================================
-# Update netcup DNS records with the current public IP, then repeat on an interval
-# ==============================================================================
 
 readonly DEFAULT_INTERVAL=5
 
@@ -13,8 +10,7 @@ fi
 
 interval=$(bashio::config 'update_interval')
 
-# Guards the sleep below against an unreadable or unset option. Without a usable
-# number the loop would spin and hammer the netcup API.
+# Without a usable number the sleep fails and the loop hammers the netcup API.
 if ! [[ "${interval}" =~ ^[0-9]+$ ]] || [[ "${interval}" -lt 1 ]]; then
     bashio::log.warning "Could not read the update interval, falling back to ${DEFAULT_INTERVAL}."
     interval=${DEFAULT_INTERVAL}

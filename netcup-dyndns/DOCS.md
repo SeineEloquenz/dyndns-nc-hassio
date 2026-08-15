@@ -21,9 +21,9 @@ a single run.
 
 Both key types live in the CCP under **master data → API**, in two separate sections:
 
-- **Legacy-API-Keys** — gives you the *Legacy API key* and *API password* used by the classic DNS
+- **Legacy-API-Keys** gives you the *Legacy API key* and *API password* used by the classic DNS
   API. Both are needed, along with your customer number.
-- **API-Keys** — gives you the regular *API key* used by CloudDNS. This is a different key; a
+- **API-Keys** gives you the regular *API key* used by CloudDNS. This is a different key. A
   Legacy key will not work for CloudDNS, and vice versa.
 
 ## Domain list format
@@ -105,19 +105,19 @@ updates of the app.
 
 ## Troubleshooting
 
-**"Nothing to update"** — neither domain list is filled in. Add at least one.
+**"Nothing to update"**. Neither domain list is filled in. Add at least one.
 
-**The log reports statuscode 5029, or says the zone contains no DNS records** — the domain has
+**The log reports statuscode 5029, or says the zone contains no DNS records**. The domain has
 been migrated to CloudDNS. Move it from `domains` to `clouddns_domains` and set
 `clouddns_api_key`.
 
-**Authentication fails for CloudDNS** — you are probably using a Legacy API key. CloudDNS needs a
+**Authentication fails for CloudDNS**. You are probably using a Legacy API key. CloudDNS needs a
 key from the "API-Keys" section of the CCP.
 
-**Every run fails while looking up the IPv6 address** — turn off `use_ipv6` if your connection has
+**Every run fails while looking up the IPv6 address**. Turn off `use_ipv6` if your connection has
 no IPv6 connectivity.
 
-**Records do not change even though your IP did** — restart the app. That clears nothing by
+**Records do not change even though your IP did**. Restart the app. That clears nothing by
 itself, but the log will show whether the updater considers the cached address current.
 
 ## Credits
