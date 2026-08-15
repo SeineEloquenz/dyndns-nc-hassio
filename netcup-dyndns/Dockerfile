@@ -21,6 +21,6 @@ LABEL \
     io.hass.description="Keeps netcup DNS records pointed at your current public IP address" \
     org.opencontainers.image.title="Home Assistant App: netcup Dynamic DNS" \
     org.opencontainers.image.description="Keeps netcup DNS records pointed at your current public IP address" \
-    org.opencontainers.image.source="https://github.com/SeineEloquenz/netcup-dyndns-hass" \
+    org.opencontainers.image.source="https://github.com/SeineEloquenz/dyndns-nc-hassio" \
     org.opencontainers.image.licenses="MIT" \
     nz.eloque.netcup-dyndns.upstream-version="${UPSTREAM_VERSION}"
