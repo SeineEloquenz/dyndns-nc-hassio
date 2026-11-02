@@ -1,8 +1,8 @@
 FROM ghcr.io/home-assistant/base:3.24
 
-ARG UPSTREAM_VERSION=7.0.0
+ARG UPSTREAM_VERSION=7.0.1
 # Both ARG lines are rewritten by the upstream-release workflow.
-ARG UPSTREAM_REF=8e1e33423df69b6e4bb8bd53beaf9cbc442bfd67
+ARG UPSTREAM_REF=eb69783e334d87e35b8ff6e4440467fbe3326b09
 
 ARG PHP_PKG=php84
 
