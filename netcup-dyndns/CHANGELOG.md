@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0
+
+- Update dynamic-dns-netcup-api to v7.0.1.
+
 ## 1.0.1
 
 - Fix a startup crash loop on base image 3.24, where PHP is installed without the
